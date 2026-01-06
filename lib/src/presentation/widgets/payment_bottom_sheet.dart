@@ -22,7 +22,7 @@ class ApprooPaymentBottomSheet {
     Widget? emptyWidget,
     Widget Function(BuildContext, Product)? productBuilder,
     void Function(String)? onPaymentUrlLoaded,
-    void Function(String)? onError,
+    void Function(int statusCode, String message)? onError, // ✅ Updated
     bool useRtl = true,
   }) async {
     final paymentBloc = ApprooPaymentBuilder.createPaymentBloc(
@@ -53,7 +53,7 @@ class ApprooPaymentBottomSheet {
               emptyWidget: emptyWidget,
               productBuilder: productBuilder,
               onPaymentUrlLoaded: onPaymentUrlLoaded,
-              onError: onError,
+              onError: onError, // ✅ Updated
               useRtl: useRtl,
             ),
           ),
@@ -73,7 +73,7 @@ class _PaymentBottomSheetContent extends StatelessWidget {
   final Widget? emptyWidget;
   final Widget Function(BuildContext, Product)? productBuilder;
   final void Function(String)? onPaymentUrlLoaded;
-  final void Function(String)? onError;
+  final void Function(int statusCode, String message)? onError; // ✅ Updated
   final bool useRtl;
 
   const _PaymentBottomSheetContent({
@@ -105,13 +105,18 @@ class _PaymentBottomSheetContent extends StatelessWidget {
           }
         }
 
-        if (state is PaymentUrlError || state is ProductError) {
-          final errorMessage = state is PaymentUrlError
-              ? state.message
-              : (state as ProductError).message;
-
+        // ✅ Updated error handling to include status codes
+        if (state is PaymentUrlError) {
           if (onError != null) {
-            onError!(errorMessage);
+            Navigator.of(context).pop();
+            onError!(state.statusCode??400, state.message); // ✅ Now includes status code
+          }
+        }
+
+        if (state is ProductError) {
+          if (onError != null) {
+            Navigator.of(context).pop();
+            onError!(state.statusCode??400, state.message); // ✅ Now includes status code
           }
         }
       },
@@ -196,7 +201,7 @@ class _PaymentBottomSheetContent extends StatelessWidget {
       return loadingWidget ?? _buildShimmerLoading();
     }
 
-    // ⚠️ Error state
+    // ⚠️ Error state - Updated to show status code if available
     if (state is ProductError) {
       return errorWidget ??
           SizedBox(
@@ -219,6 +224,15 @@ class _PaymentBottomSheetContent extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
+                  // ✅ Show status code if available
+                  if (state.statusCode != null)
+                    Text(
+                      'کد خطا: ${state.statusCode}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        fontSize: 12,
+                      ),
+                    ),
                   Text(
                     state.message,
                     style: TextStyle(

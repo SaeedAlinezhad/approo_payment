@@ -20,11 +20,12 @@ class ProductLoaded extends PaymentState {
 }
 
 class ProductError extends PaymentState {
+  final int? statusCode;
   final String message;
-  const ProductError(this.message);
+  const ProductError(this.message, this.statusCode);
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, statusCode];
 }
 
 class PaymentUrlLoading extends PaymentState {}
@@ -39,8 +40,10 @@ class PaymentUrlLoaded extends PaymentState {
 
 class PaymentUrlError extends PaymentState {
   final String message;
-  const PaymentUrlError(this.message);
+  final int? statusCode;
+
+  const PaymentUrlError(this.message, this.statusCode);
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, statusCode];
 }
