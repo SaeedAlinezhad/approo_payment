@@ -12,6 +12,7 @@
         "equatable",
         "flutter",
         "flutter_bloc",
+        "flutter_poolakey",
         "icons_plus",
         "persian_number_utility",
         "shimmer",
@@ -93,6 +94,14 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "flutter_poolakey",
+      "version": "2.2.0+1.0.0",
+      "dependencies": [
+        "flutter",
+        "plugin_platform_interface"
       ]
     },
     {
@@ -543,6 +552,13 @@
       ]
     },
     {
+      "name": "plugin_platform_interface",
+      "version": "2.1.8",
+      "dependencies": [
+        "meta"
+      ]
+    },
+    {
       "name": "flutter_svg",
       "version": "2.2.3",
       "dependencies": [
@@ -829,13 +845,6 @@
       "version": "0.0.0",
       "dependencies": [
         "flutter"
-      ]
-    },
-    {
-      "name": "plugin_platform_interface",
-      "version": "2.1.8",
-      "dependencies": [
-        "meta"
       ]
     },
     {

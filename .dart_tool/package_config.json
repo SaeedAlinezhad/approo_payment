@@ -170,6 +170,12 @@
       "languageVersion": "2.14"
     },
     {
+      "name": "flutter_poolakey",
+      "rootUri": "file:///C:/Users/Saeed/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_poolakey-2.2.0+1.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "flutter_svg",
       "rootUri": "file:///C:/Users/Saeed/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_svg-2.2.3",
       "packageUri": "lib/",

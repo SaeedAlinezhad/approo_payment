@@ -10,11 +10,13 @@ abstract class PaymentEvent extends Equatable {
 class LoadProducts extends PaymentEvent {}
 
 class SelectProduct extends PaymentEvent {
-  final int productId;
-  final String? description;
+  final String productId;
+  final String? productUuid; // Add this for market payments
+  final String? description; // Keep this for backward compatibility
+  final String? marketRSA; // Keep this for backward compatibility
 
-  const SelectProduct(this.productId, {this.description});
+  const SelectProduct(this.productId, {this.productUuid, this.description, this.marketRSA});
 
   @override
-  List<Object?> get props => [productId, description];
+  List<Object?> get props => [productId, productUuid, description];
 }

@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:approo_payment/src/domain/repositories/payment_repository.dart';
 import 'package:approo_payment/src/data/models/product.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 
 part 'payment_event.dart';
 part 'payment_state.dart';
@@ -27,20 +28,28 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     });
 
     on<SelectProduct>((event, emit) async {
-      emit(PaymentUrlLoading());
+      // Clear any previous payment status
+      emit(state.copyWith(paymentStatus: null));
+      
       try {
-        final paymentGateway = await paymentRepository.getPaymentGateway(
-          productId: event.productId,
-          description: event.description ?? 'Payment for subscription',
+        // Call market payment
+        final result = await paymentRepository.marketPayment(
+          event.productId,
+          event.productUuid ?? '',
+          event.marketRSA??""
         );
-        emit(PaymentUrlLoaded(paymentGateway.url));
-      } catch (e) {
-        if (e is DioError) {
-          final status = e.response?.statusCode;
-          emit(PaymentUrlError(e.toString(), status));
+        
+        // Update state with success status
+        emit(state.copyWith(paymentStatus: ProductPaymentSuccess(result)));
+        
+      } on PlatformException catch (e) {
+        if (e.code == "PURCHASE_CANCELLED") {
+          emit(state.copyWith(paymentStatus: ProductPaymentError("پرداخت توسط کاربر لغو شد")));
         } else {
-          emit(PaymentUrlError(e.toString(), null));
+          emit(state.copyWith(paymentStatus: ProductPaymentError("خطای پلتفرم: ${e.message}")));
         }
+      } catch (e) {
+        emit(state.copyWith(paymentStatus: ProductPaymentError("خطای ناشناخته: $e")));
       }
     });
   }

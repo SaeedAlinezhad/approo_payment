@@ -31,4 +31,9 @@ class PaymentRepositoryImpl implements PaymentRepository {
       projectPackageName: projectPackageName,
     );
   }
+
+    @override
+  Future<String> marketPayment(String productId, String productUuid, String marketRSA) =>
+      paymentRemoteDataSource.processMarketPayment( productId: productId, productUuid: productUuid, marketRSA: marketRSA, projectPackageName: projectPackageName, );
+
 }

@@ -13,6 +13,7 @@ class ApprooPaymentBottomSheet {
     required String baseUrl,
     required String projectPackageName,
     required String authToken,
+    required String marketRSA,
     Map<String, dynamic>? additionalHeaders,
     Dio? existingDio,
     String? title,
@@ -55,6 +56,7 @@ class ApprooPaymentBottomSheet {
               onPaymentUrlLoaded: onPaymentUrlLoaded,
               onError: onError, // ✅ Updated
               useRtl: useRtl,
+              marketRSA: marketRSA,
             ),
           ),
         );
@@ -75,7 +77,7 @@ class _PaymentBottomSheetContent extends StatelessWidget {
   final void Function(String)? onPaymentUrlLoaded;
   final void Function(int statusCode, String message)? onError; // ✅ Updated
   final bool useRtl;
-
+  final String marketRSA;
   const _PaymentBottomSheetContent({
     this.title,
     this.description,
@@ -85,7 +87,7 @@ class _PaymentBottomSheetContent extends StatelessWidget {
     this.productBuilder,
     this.onPaymentUrlLoaded,
     this.onError,
-    required this.useRtl,
+    required this.useRtl, required this.marketRSA,
   });
 
   @override
@@ -157,7 +159,7 @@ class _PaymentBottomSheetContent extends StatelessWidget {
                 // Content
                 BlocBuilder<PaymentBloc, PaymentState>(
                   builder: (context, state) {
-                    return _buildContent(context, state);
+                    return _buildContent(context, state, marketRSA);
                   },
                 ),
               ],
@@ -168,7 +170,7 @@ class _PaymentBottomSheetContent extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, PaymentState state) {
+  Widget _buildContent(BuildContext context, PaymentState state,String marketRsa) {
     // 🕓 Payment loading state
     if (state is PaymentUrlLoading) {
       return SizedBox(
@@ -275,7 +277,7 @@ class _PaymentBottomSheetContent extends StatelessWidget {
             );
       }
 
-      return _buildProductsList(context, state.products);
+      return _buildProductsList(context, state.products, marketRsa);
     }
 
     return Row(
@@ -285,7 +287,7 @@ class _PaymentBottomSheetContent extends StatelessWidget {
     );
   }
 
-  Widget _buildProductsList(BuildContext context, List<Product> products) {
+  Widget _buildProductsList(BuildContext context, List<Product> products, String marketRsa) {
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -297,12 +299,12 @@ class _PaymentBottomSheetContent extends StatelessWidget {
           return productBuilder!(context, product);
         }
 
-        return _buildProductCard(context, product);
+        return _buildProductCard(context, product,marketRsa);
       },
     );
   }
 
-  Widget _buildProductCard(BuildContext context, Product product) {
+  Widget _buildProductCard(BuildContext context, Product product, String marketRsa) {
     final theme = Theme.of(context);
     
     return Card(
@@ -346,7 +348,7 @@ class _PaymentBottomSheetContent extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                context.read<PaymentBloc>().add(SelectProduct(product.id));
+                context.read<PaymentBloc>().add(SelectProduct(product.id.toString(), productUuid: product.id.toString(),marketRSA: marketRsa));
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,

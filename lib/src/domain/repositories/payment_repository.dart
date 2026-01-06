@@ -7,4 +7,5 @@ abstract class PaymentRepository {
     required int productId,
     String description,
   });
+  Future<String> marketPayment(String productId, String productUuid, String marketRSA);
 }
