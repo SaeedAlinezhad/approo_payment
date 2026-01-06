@@ -24,10 +24,11 @@ class PaymentRepositoryImpl implements PaymentRepository {
   Future<PaymentGateway> getPaymentGateway({
     required int productId,
     String description = 'Payment for subscription',
-  }) {
-    return paymentRemoteDataSource.getPaymentGateway(
+  }) async{
+    return await paymentRemoteDataSource.getPaymentGateway(
       productId: productId,
       description: description,
+      projectPackageName: projectPackageName,
     );
   }
 }

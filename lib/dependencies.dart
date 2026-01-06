@@ -1,3 +1,4 @@
+// dependencies.dart - Updated version
 import 'package:approo_payment/src/data/datasources/product_remote_data_source.dart';
 import 'package:approo_payment/src/data/datasources/payment_remote_data_source.dart';
 import 'package:approo_payment/src/data/repositories/payment_repository_impl.dart';
@@ -6,54 +7,77 @@ import 'package:approo_payment/src/presentation/bloc/payment_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 
-final GetIt sl = GetIt.instance;
-
 class ApprooPaymentConfig {
   final String baseUrl;
   final String projectPackageName;
-  final String? authToken;
   final Map<String, dynamic>? additionalHeaders;
 
   ApprooPaymentConfig({
     required this.baseUrl,
     required this.projectPackageName,
-    this.authToken,
     this.additionalHeaders,
   });
 }
 
-void initApprooPayment(ApprooPaymentConfig config) {
-  // Dio Client
-  sl.registerLazySingleton(() => Dio()
-    ..options.baseUrl = config.baseUrl
-    ..options.headers = {
+class ApprooPaymentBuilder {
+  static PaymentBloc createPaymentBloc({
+    required String baseUrl,
+    required String projectPackageName,
+    required String authToken,
+    Map<String, dynamic>? additionalHeaders,
+    Dio? existingDio,
+  }) {
+    // Create Dio instance
+    final dio = existingDio ?? Dio();
+    dio.options.baseUrl = baseUrl;
+    dio.options.headers = {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      if (config.authToken != null) 'Authorization': 'Bearer ${config.authToken}',
-      ...?config.additionalHeaders,
-    });
+      'Authorization': 'Bearer $authToken',
+      ...?additionalHeaders,
+    };
 
-  // Data Sources
-  sl.registerLazySingleton<ProductRemoteDataSource>(
-    () => ProductRemoteDataSourceImpl(dio: sl()),
-  );
-  sl.registerLazySingleton<PaymentRemoteDataSource>(
-    () => PaymentRemoteDataSourceImpl(dio: sl()),
-  );
+    // Create data sources
+    final productDataSource = ProductRemoteDataSourceImpl(dio: dio);
+    final paymentDataSource = PaymentRemoteDataSourceImpl(dio: dio);
 
-  // Repository
-  sl.registerLazySingleton<PaymentRepository>(
-    () => PaymentRepositoryImpl(
-      productRemoteDataSource: sl(),
-      paymentRemoteDataSource: sl(),
-      projectPackageName: config.projectPackageName,
-    ),
-  );
+    // Create repository
+    final paymentRepository = PaymentRepositoryImpl(
+      productRemoteDataSource: productDataSource,
+      paymentRemoteDataSource: paymentDataSource,
+      projectPackageName: projectPackageName,
+    );
 
-  // Bloc
-  sl.registerFactory(
-    () => PaymentBloc(paymentRepository: sl()),
-  );
+    // Create and return bloc
+    return PaymentBloc(paymentRepository: paymentRepository);
+  }
+
+  static PaymentRepository createPaymentRepository({
+    required String baseUrl,
+    required String projectPackageName,
+    required String authToken,
+    Map<String, dynamic>? additionalHeaders,
+    Dio? existingDio,
+  }) {
+    // Create Dio instance
+    final dio = existingDio ?? Dio();
+    dio.options.baseUrl = baseUrl;
+    dio.options.headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $authToken',
+      ...?additionalHeaders,
+    };
+
+    // Create data sources
+    final productDataSource = ProductRemoteDataSourceImpl(dio: dio);
+    final paymentDataSource = PaymentRemoteDataSourceImpl(dio: dio);
+
+    // Create and return repository
+    return PaymentRepositoryImpl(
+      productRemoteDataSource: productDataSource,
+      paymentRemoteDataSource: paymentDataSource,
+      projectPackageName: projectPackageName,
+    );
+  }
 }
-
-PaymentBloc getPaymentBloc() => sl<PaymentBloc>();

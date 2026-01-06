@@ -5,6 +5,7 @@ abstract class PaymentRemoteDataSource {
   Future<PaymentGateway> getPaymentGateway({
     required int productId,
     required String description,
+    required String projectPackageName,
   });
 }
 
@@ -17,12 +18,14 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
   Future<PaymentGateway> getPaymentGateway({
     required int productId,
     required String description,
+    required String projectPackageName,
   }) async {
     final response = await dio.post(
       '/zarinpal/gateway',
       data: {
         'product_id': productId.toString(),
         'description': description,
+        'package_name': projectPackageName,
       },
     );
 

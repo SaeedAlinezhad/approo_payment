@@ -1,3 +1,5 @@
+import 'package:approo_payment/dependencies.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,7 +10,11 @@ import 'package:approo_payment/src/data/models/product.dart';
 class ApprooPaymentBottomSheet {
   static Future<void> show({
     required BuildContext context,
-    required PaymentBloc paymentBloc,
+    required String baseUrl,
+    required String projectPackageName,
+    required String authToken,
+    Map<String, dynamic>? additionalHeaders,
+    Dio? existingDio,
     String? title,
     String? description,
     Widget? loadingWidget,
@@ -19,6 +25,14 @@ class ApprooPaymentBottomSheet {
     void Function(String)? onError,
     bool useRtl = true,
   }) async {
+    // Create bloc instance with fresh token
+    final paymentBloc = ApprooPaymentBuilder.createPaymentBloc(
+      baseUrl: baseUrl,
+      projectPackageName: projectPackageName,
+      authToken: authToken,
+      additionalHeaders: additionalHeaders,
+      existingDio: existingDio,
+    );
     await showModalBottomSheet(
       useSafeArea: true,
       context: context,
@@ -43,7 +57,9 @@ class ApprooPaymentBottomSheet {
           ),
         );
       },
-    );
+    ).then((_)=>{
+      paymentBloc.close(),
+    });
   }
 }
 
