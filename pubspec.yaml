@@ -1,0 +1,31 @@
+name: approo_payment
+description: A Flutter package for handling in-app purchases and payment gateways
+version: 1.0.0
+homepage: https://github.com/yourusername/approo_payment
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  equatable: ^2.0.8
+  bloc: ^9.2.0
+  flutter_bloc: ^9.1.1
+  dio: ^5.9.0
+  url_launcher: ^6.3.2
+  toastification: ^3.0.3
+  persian_number_utility: ^1.1.6
+  icons_plus: ^5.0.0
+  get_it: ^9.2.0
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mockito: ^5.4.2
+  build_runner: ^2.4.6
+
+flutter:
+  assets: []
