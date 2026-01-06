@@ -188,12 +188,6 @@
       "languageVersion": "3.8"
     },
     {
-      "name": "get_it",
-      "rootUri": "file:///C:/Users/Saeed/AppData/Local/Pub/Cache/hosted/pub.dev/get_it-9.2.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.0"
-    },
-    {
       "name": "glob",
       "rootUri": "file:///C:/Users/Saeed/AppData/Local/Pub/Cache/hosted/pub.dev/glob-2.1.3",
       "packageUri": "lib/",

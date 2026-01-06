@@ -12,7 +12,6 @@
         "equatable",
         "flutter",
         "flutter_bloc",
-        "get_it",
         "icons_plus",
         "persian_number_utility",
         "toastification",
@@ -93,15 +92,6 @@
         "stream_channel",
         "test_api",
         "vector_math"
-      ]
-    },
-    {
-      "name": "get_it",
-      "version": "9.2.0",
-      "dependencies": [
-        "async",
-        "collection",
-        "meta"
       ]
     },
     {

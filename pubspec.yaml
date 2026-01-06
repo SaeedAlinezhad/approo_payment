@@ -18,7 +18,6 @@ dependencies:
   toastification: ^3.0.3
   persian_number_utility: ^1.1.6
   icons_plus: ^5.0.0
-  get_it: ^9.2.0
 
 
 dev_dependencies:

@@ -5,7 +5,6 @@ import 'package:approo_payment/src/data/repositories/payment_repository_impl.dar
 import 'package:approo_payment/src/domain/repositories/payment_repository.dart';
 import 'package:approo_payment/src/presentation/bloc/payment_bloc.dart';
 import 'package:dio/dio.dart';
-import 'package:get_it/get_it.dart';
 
 class ApprooPaymentConfig {
   final String baseUrl;
