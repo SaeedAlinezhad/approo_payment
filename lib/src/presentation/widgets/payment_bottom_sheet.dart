@@ -25,7 +25,6 @@ class ApprooPaymentBottomSheet {
     void Function(String)? onError,
     bool useRtl = true,
   }) async {
-    // Create bloc instance with fresh token
     final paymentBloc = ApprooPaymentBuilder.createPaymentBloc(
       baseUrl: baseUrl,
       projectPackageName: projectPackageName,
@@ -33,6 +32,7 @@ class ApprooPaymentBottomSheet {
       additionalHeaders: additionalHeaders,
       existingDio: existingDio,
     );
+    
     await showModalBottomSheet(
       useSafeArea: true,
       context: context,
@@ -44,21 +44,23 @@ class ApprooPaymentBottomSheet {
       builder: (sheetContext) {
         return BlocProvider.value(
           value: paymentBloc..add(LoadProducts()),
-          child: _PaymentBottomSheetContent(
-            title: title,
-            description: description,
-            loadingWidget: loadingWidget,
-            errorWidget: errorWidget,
-            emptyWidget: emptyWidget,
-            productBuilder: productBuilder,
-            onPaymentUrlLoaded: onPaymentUrlLoaded,
-            onError: onError,
-            useRtl: useRtl,
+          child: SafeArea(
+            child: _PaymentBottomSheetContent(
+              title: title,
+              description: description,
+              loadingWidget: loadingWidget,
+              errorWidget: errorWidget,
+              emptyWidget: emptyWidget,
+              productBuilder: productBuilder,
+              onPaymentUrlLoaded: onPaymentUrlLoaded,
+              onError: onError,
+              useRtl: useRtl,
+            ),
           ),
         );
       },
-    ).then((_)=>{
-      paymentBloc.close(),
+    ).then((_) {
+      paymentBloc.close();
     });
   }
 }
@@ -88,13 +90,16 @@ class _PaymentBottomSheetContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return BlocListener<PaymentBloc, PaymentState>(
       listener: (context, state) async {
         if (state is PaymentUrlLoaded) {
           if (onPaymentUrlLoaded != null) {
+            Navigator.of(context).pop();
             onPaymentUrlLoaded!(state.url);
           } else {
-            Navigator.pop(context);
+            Navigator.of(context).pop();
             final uri = Uri.parse(state.url);
             await launchUrl(uri, mode: LaunchMode.externalApplication);
           }
@@ -104,7 +109,7 @@ class _PaymentBottomSheetContent extends StatelessWidget {
           final errorMessage = state is PaymentUrlError
               ? state.message
               : (state as ProductError).message;
-          
+
           if (onError != null) {
             onError!(errorMessage);
           }
@@ -117,126 +122,38 @@ class _PaymentBottomSheetContent extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Title
                 if (title != null)
                   Text(
                     title!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: theme.textTheme.titleLarge?.color,
                     ),
                   ),
+                
+                // Description
                 if (description != null) ...[
                   const SizedBox(height: 8),
                   Text(
                     description!,
-                    style: const TextStyle(fontSize: 14),
-                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                    ),
                   ),
                 ],
-                const SizedBox(height: 16),
-                Expanded(
-                  child: BlocBuilder<PaymentBloc, PaymentState>(
-                    builder: (context, state) {
-                      // Loading state
-                      if (state is ProductLoading) {
-                        return loadingWidget ??
-                            const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                      }
-
-                      // Error state
-                      if (state is ProductError) {
-                        return errorWidget ??
-                            Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.error_outline,
-                                    color: Colors.red,
-                                    size: 48,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'خطا در بارگذاری محصولات',
-                                    style: TextStyle(
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    state.message,
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            );
-                      }
-
-                      // Success state with products
-                      if (state is ProductLoaded) {
-                        if (state.products.isEmpty) {
-                          return emptyWidget ??
-                              Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.inventory_2_outlined,
-                                      color: Colors.grey[400],
-                                      size: 48,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'هیچ محصولی برای خرید موجود نیست',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                        }
-
-                        return ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: state.products.length,
-                          itemBuilder: (context, index) {
-                            final product = state.products[index];
-                            
-                            if (productBuilder != null) {
-                              return productBuilder!(context, product);
-                            }
-
-                            return _defaultProductItem(context, product);
-                          },
-                        );
-                      }
-
-                      // Payment loading state
-                      if (state is PaymentUrlLoading) {
-                        return const Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CircularProgressIndicator(),
-                              SizedBox(height: 16),
-                              Text('در حال هدایت به درگاه پرداخت...'),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return const SizedBox();
-                    },
-                  ),
+                
+                const SizedBox(height: 20),
+                
+                // Content
+                BlocBuilder<PaymentBloc, PaymentState>(
+                  builder: (context, state) {
+                    return _buildContent(context, state);
+                  },
                 ),
               ],
             ),
@@ -246,35 +163,257 @@ class _PaymentBottomSheetContent extends StatelessWidget {
     );
   }
 
-  Widget _defaultProductItem(BuildContext context, Product product) {
+  Widget _buildContent(BuildContext context, PaymentState state) {
+    // 🕓 Payment loading state
+    if (state is PaymentUrlLoading) {
+      return SizedBox(
+        height: 150,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'در حال هدایت به درگاه پرداخت...',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // ⏳ Loading state
+    if (state is ProductLoading) {
+      return loadingWidget ?? _buildShimmerLoading();
+    }
+
+    // ⚠️ Error state
+    if (state is ProductError) {
+      return errorWidget ??
+          SizedBox(
+            height: 150,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 40,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'خطا در بارگذاری محصولات',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    state.message,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+    }
+
+    // ✅ Success state with products
+    if (state is ProductLoaded) {
+      if (state.products.isEmpty) {
+        return emptyWidget ??
+            SizedBox(
+              height: 200,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.inventory_2_outlined,
+                      size: 40,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'هیچ محصولی برای خرید موجود نیست',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+      }
+
+      return _buildProductsList(context, state.products);
+    }
+
+    return Row(
+      children: [
+        const SizedBox(height: 100),
+      ],
+    );
+  }
+
+  Widget _buildProductsList(BuildContext context, List<Product> products) {
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: products.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final product = products[index];
+        if (productBuilder != null) {
+          return productBuilder!(context, product);
+        }
+
+        return _buildProductCard(context, product);
+      },
+    );
+  }
+
+  Widget _buildProductCard(BuildContext context, Product product) {
+    final theme = Theme.of(context);
+    
     return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        title: Text(
-          product.title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        subtitle: Text(
-          '${product.price.toStringAsFixed(0).seRagham()} تومان',
-          style: const TextStyle(
-            color: Colors.green,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        trailing: ElevatedButton(
-          onPressed: () {
-            context.read<PaymentBloc>().add(SelectProduct(product.id));
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-          ),
-          child: const Text('خرید'),
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.dividerColor.withOpacity(0.2),
+          width: 1,
         ),
       ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: theme.textTheme.titleMedium?.color,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${product.price.toStringAsFixed(0).seRagham()} تومان',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                context.read<PaymentBloc>().add(SelectProduct(product.id));
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+              child: const Text(
+                'خرید',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerLoading() {
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 2,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        return Card(
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: Colors.grey.shade300,
+              width: 1,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 120,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: 80,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 80,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

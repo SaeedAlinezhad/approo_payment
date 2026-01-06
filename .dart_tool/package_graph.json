@@ -14,6 +14,7 @@
         "flutter_bloc",
         "icons_plus",
         "persian_number_utility",
+        "shimmer",
         "toastification",
         "url_launcher"
       ],
@@ -92,6 +93,13 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "shimmer",
+      "version": "3.0.0",
+      "dependencies": [
+        "flutter"
       ]
     },
     {
