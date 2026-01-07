@@ -23,6 +23,7 @@ class ApprooPaymentBottomSheet {
     Widget? emptyWidget,
     Widget Function(BuildContext, Product)? productBuilder,
     void Function(String)? onPaymentUrlLoaded,
+    void Function(String)? onPaymentSuccess,
     void Function(int statusCode, String message)? onError, // ✅ Updated
     bool useRtl = true,
   }) async {
@@ -33,7 +34,7 @@ class ApprooPaymentBottomSheet {
       additionalHeaders: additionalHeaders,
       existingDio: existingDio,
     );
-    
+
     await showModalBottomSheet(
       useSafeArea: true,
       context: context,
@@ -54,7 +55,8 @@ class ApprooPaymentBottomSheet {
               emptyWidget: emptyWidget,
               productBuilder: productBuilder,
               onPaymentUrlLoaded: onPaymentUrlLoaded,
-              onError: onError, // ✅ Updated
+              onPaymentSuccess: onPaymentSuccess,
+              onError: onError,
               useRtl: useRtl,
               marketRSA: marketRSA,
             ),
@@ -75,7 +77,8 @@ class _PaymentBottomSheetContent extends StatelessWidget {
   final Widget? emptyWidget;
   final Widget Function(BuildContext, Product)? productBuilder;
   final void Function(String)? onPaymentUrlLoaded;
-  final void Function(int statusCode, String message)? onError; // ✅ Updated
+  final void Function(String)? onPaymentSuccess;
+  final void Function(int statusCode, String message)? onError;
   final bool useRtl;
   final String marketRSA;
   const _PaymentBottomSheetContent({
@@ -86,16 +89,29 @@ class _PaymentBottomSheetContent extends StatelessWidget {
     this.emptyWidget,
     this.productBuilder,
     this.onPaymentUrlLoaded,
+    this.onPaymentSuccess,
     this.onError,
-    required this.useRtl, required this.marketRSA,
+    required this.useRtl,
+    required this.marketRSA,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return BlocListener<PaymentBloc, PaymentState>(
       listener: (context, state) async {
+        final status = state.paymentStatus;
+
+        if (status is ProductPaymentError && onError != null) {
+          Navigator.of(context).pop();
+          onError!(400, status.message);
+        }
+        if (status is ProductPaymentSuccess && onError != null && onPaymentSuccess!=null) {
+          Navigator.of(context).pop();
+          onPaymentSuccess!(status.result);
+        }
+        
         if (state is PaymentUrlLoaded) {
           if (onPaymentUrlLoaded != null) {
             Navigator.of(context).pop();
@@ -111,14 +127,14 @@ class _PaymentBottomSheetContent extends StatelessWidget {
         if (state is PaymentUrlError) {
           if (onError != null) {
             Navigator.of(context).pop();
-            onError!(state.statusCode??400, state.message); // ✅ Now includes status code
+            onError!(state.statusCode ?? 400, state.message);
           }
         }
 
         if (state is ProductError) {
           if (onError != null) {
             Navigator.of(context).pop();
-            onError!(state.statusCode??400, state.message); // ✅ Now includes status code
+            onError!(state.statusCode ?? 400, state.message);
           }
         }
       },
@@ -141,7 +157,7 @@ class _PaymentBottomSheetContent extends StatelessWidget {
                       color: theme.textTheme.titleLarge?.color,
                     ),
                   ),
-                
+
                 // Description
                 if (description != null) ...[
                   const SizedBox(height: 8),
@@ -149,13 +165,14 @@ class _PaymentBottomSheetContent extends StatelessWidget {
                     description!,
                     style: TextStyle(
                       fontSize: 14,
-                      color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                      color:
+                          theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
                     ),
                   ),
                 ],
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Content
                 BlocBuilder<PaymentBloc, PaymentState>(
                   builder: (context, state) {
@@ -170,7 +187,8 @@ class _PaymentBottomSheetContent extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, PaymentState state,String marketRsa) {
+  Widget _buildContent(
+      BuildContext context, PaymentState state, String marketRsa) {
     // 🕓 Payment loading state
     if (state is PaymentUrlLoading) {
       return SizedBox(
@@ -188,7 +206,8 @@ class _PaymentBottomSheetContent extends StatelessWidget {
               Text(
                 'در حال هدایت به درگاه پرداخت...',
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -231,14 +250,20 @@ class _PaymentBottomSheetContent extends StatelessWidget {
                     Text(
                       'کد خطا: ${state.statusCode}',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.6),
                         fontSize: 12,
                       ),
                     ),
                   Text(
                     state.message,
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
                       fontSize: 12,
                     ),
                   ),
@@ -261,13 +286,19 @@ class _PaymentBottomSheetContent extends StatelessWidget {
                     Icon(
                       Icons.inventory_2_outlined,
                       size: 40,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.4),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       'هیچ محصولی برای خرید موجود نیست',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.6),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -287,7 +318,8 @@ class _PaymentBottomSheetContent extends StatelessWidget {
     );
   }
 
-  Widget _buildProductsList(BuildContext context, List<Product> products, String marketRsa) {
+  Widget _buildProductsList(
+      BuildContext context, List<Product> products, String marketRsa) {
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -299,14 +331,15 @@ class _PaymentBottomSheetContent extends StatelessWidget {
           return productBuilder!(context, product);
         }
 
-        return _buildProductCard(context, product,marketRsa);
+        return _buildProductCard(context, product, marketRsa);
       },
     );
   }
 
-  Widget _buildProductCard(BuildContext context, Product product, String marketRsa) {
+  Widget _buildProductCard(
+      BuildContext context, Product product, String marketRsa) {
     final theme = Theme.of(context);
-    
+
     return Card(
       elevation: 0,
       margin: EdgeInsets.zero,
@@ -348,7 +381,10 @@ class _PaymentBottomSheetContent extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                context.read<PaymentBloc>().add(SelectProduct(product.id.toString(), productUuid: product.id.toString(),marketRSA: marketRsa));
+                context.read<PaymentBloc>().add(SelectProduct(
+                    product.id.toString(),
+                    productUuid: product.uuid.toString(),
+                    marketRSA: marketRsa));
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
@@ -356,7 +392,8 @@ class _PaymentBottomSheetContent extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
               child: const Text(
                 'خرید',

@@ -112,7 +112,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
     required String purchaseToken,
   }) async {
     return await dio.put(
-      'https://payment.vada.ir/api/package-names/$projectPackageName/products/$productId/subscribe',
+      '/package-names/$projectPackageName/products/$productId/subscribe',
       data: {
         'purchase_token': purchaseToken,
         'gateway': 'cafe',
