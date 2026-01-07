@@ -1,3 +1,4 @@
+import 'package:approo_payment/src/data/models/market_payment_result.dart';
 import 'package:approo_payment/src/data/models/product.dart';
 import 'package:approo_payment/src/data/models/payment_gateway.dart';
 
@@ -7,5 +8,9 @@ abstract class PaymentRepository {
     required int productId,
     String description,
   });
-  Future<String> marketPayment(String productId, String productUuid, String marketRSA);
+  Future<MarketPaymentResult> marketPayment(String productId, String productUuid, String marketRSA);
+    Future<void> retryVerification({
+    required String productId,
+    required String purchaseToken,
+  });
 }

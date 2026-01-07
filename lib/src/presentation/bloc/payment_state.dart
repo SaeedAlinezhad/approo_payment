@@ -118,3 +118,11 @@ class ProductPaymentError extends PaymentStatus {
   @override
   List<Object?> get props => [message];
 }
+class ProductPaymentPending extends PaymentStatus {
+  final PendingPurchase pending;
+
+  ProductPaymentPending(this.pending);
+
+  @override
+  List<Object?> get props => [pending];
+}

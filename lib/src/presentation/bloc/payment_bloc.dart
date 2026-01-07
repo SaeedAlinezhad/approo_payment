@@ -1,3 +1,5 @@
+import 'package:approo_payment/src/data/models/market_payment_result.dart';
+import 'package:approo_payment/src/domain/entities/pending_purchase.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:approo_payment/src/domain/repositories/payment_repository.dart';
@@ -30,26 +32,42 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     on<SelectProduct>((event, emit) async {
       // Clear any previous payment status
       emit(state.copyWith(paymentStatus: null));
-      
+
       try {
         // Call market payment
         final result = await paymentRepository.marketPayment(
-          event.productId,
-          event.productUuid ?? '',
-          event.marketRSA??""
-        );
-        
+            event.productId, event.productUuid ?? '', event.marketRSA ?? "");
+
         // Update state with success status
-        emit(state.copyWith(paymentStatus: ProductPaymentSuccess(result)));
-        
+        // emit(state.copyWith(paymentStatus: ProductPaymentSuccess(result)));
+        if (result is MarketPaymentSuccess) {
+          emit(state.copyWith(
+            paymentStatus: ProductPaymentSuccess(""),
+          ));
+        }
+
+        if (result is MarketPaymentPending) {
+          emit(state.copyWith(
+            paymentStatus: ProductPaymentPending(result.pending),
+          ));
+        }
+
+        if (result is MarketPaymentFailure) {
+          emit(state.copyWith(
+            paymentStatus: ProductPaymentError(result.message),
+          ));
+        }
       } on PlatformException catch (e) {
         if (e.code == "PURCHASE_CANCELLED") {
-          emit(state.copyWith(paymentStatus: ProductPaymentError("پرداخت توسط کاربر لغو شد")));
+          emit(state.copyWith(
+              paymentStatus: ProductPaymentError("پرداخت توسط کاربر لغو شد")));
         } else {
-          emit(state.copyWith(paymentStatus: ProductPaymentError("خطای پلتفرم: ${e.message}")));
+          emit(state.copyWith(
+              paymentStatus: ProductPaymentError("خطای پلتفرم: ${e.message}")));
         }
       } catch (e) {
-        emit(state.copyWith(paymentStatus: ProductPaymentError("خطای ناشناخته: $e")));
+        emit(state.copyWith(
+            paymentStatus: ProductPaymentError("خطای ناشناخته: $e")));
       }
     });
   }

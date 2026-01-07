@@ -1,4 +1,5 @@
 import 'package:approo_payment/dependencies.dart';
+import 'package:approo_payment/src/domain/entities/pending_purchase.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,7 +25,8 @@ class ApprooPaymentBottomSheet {
     Widget Function(BuildContext, Product)? productBuilder,
     void Function(String)? onPaymentUrlLoaded,
     void Function(String)? onPaymentSuccess,
-    void Function(int statusCode, String message)? onError, // ✅ Updated
+    void Function(int statusCode, String message)? onError,
+    void Function(PendingPurchase pending)? onPendingPurchase,
     bool useRtl = true,
   }) async {
     final paymentBloc = ApprooPaymentBuilder.createPaymentBloc(
@@ -56,6 +58,7 @@ class ApprooPaymentBottomSheet {
               productBuilder: productBuilder,
               onPaymentUrlLoaded: onPaymentUrlLoaded,
               onPaymentSuccess: onPaymentSuccess,
+              onPendingPurchase:onPendingPurchase,
               onError: onError,
               useRtl: useRtl,
               marketRSA: marketRSA,
@@ -79,6 +82,7 @@ class _PaymentBottomSheetContent extends StatelessWidget {
   final void Function(String)? onPaymentUrlLoaded;
   final void Function(String)? onPaymentSuccess;
   final void Function(int statusCode, String message)? onError;
+  final Function(PendingPurchase pending)? onPendingPurchase;
   final bool useRtl;
   final String marketRSA;
   const _PaymentBottomSheetContent({
@@ -91,6 +95,7 @@ class _PaymentBottomSheetContent extends StatelessWidget {
     this.onPaymentUrlLoaded,
     this.onPaymentSuccess,
     this.onError,
+    this.onPendingPurchase,
     required this.useRtl,
     required this.marketRSA,
   });
@@ -107,11 +112,18 @@ class _PaymentBottomSheetContent extends StatelessWidget {
           Navigator.of(context).pop();
           onError!(400, status.message);
         }
-        if (status is ProductPaymentSuccess && onError != null && onPaymentSuccess!=null) {
+        if (status is ProductPaymentSuccess &&
+            onError != null &&
+            onPaymentSuccess != null) {
           Navigator.of(context).pop();
           onPaymentSuccess!(status.result);
         }
-        
+        if (status is ProductPaymentPending) {
+          Navigator.of(context).pop();
+          onPendingPurchase!(status.pending);
+
+        }
+
         if (state is PaymentUrlLoaded) {
           if (onPaymentUrlLoaded != null) {
             Navigator.of(context).pop();

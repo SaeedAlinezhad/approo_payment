@@ -80,3 +80,37 @@ class ApprooPaymentBuilder {
     );
   }
 }
+
+
+class ApprooPayment {
+  static Future<void> retryVerification({
+    required String baseUrl,
+    required String projectPackageName,
+    required String authToken,
+    required String productId,
+    required String purchaseToken,
+    Map<String, dynamic>? additionalHeaders,
+    Dio? existingDio,
+  }) async {
+    final dio = existingDio ?? Dio();
+
+    dio.options.baseUrl = baseUrl;
+    dio.options.headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $authToken',
+      ...?additionalHeaders,
+    };
+
+    final repo = PaymentRepositoryImpl(
+      productRemoteDataSource: ProductRemoteDataSourceImpl(dio: dio),
+      paymentRemoteDataSource: PaymentRemoteDataSourceImpl(dio: dio),
+      projectPackageName: projectPackageName,
+    );
+
+    await repo.retryVerification(
+      productId: productId,
+      purchaseToken: purchaseToken,
+    );
+  }
+}

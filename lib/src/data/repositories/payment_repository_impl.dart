@@ -1,5 +1,6 @@
 import 'package:approo_payment/src/data/datasources/product_remote_data_source.dart';
 import 'package:approo_payment/src/data/datasources/payment_remote_data_source.dart';
+import 'package:approo_payment/src/data/models/market_payment_result.dart';
 import 'package:approo_payment/src/data/models/product.dart';
 import 'package:approo_payment/src/data/models/payment_gateway.dart';
 import 'package:approo_payment/src/domain/repositories/payment_repository.dart';
@@ -33,7 +34,24 @@ class PaymentRepositoryImpl implements PaymentRepository {
   }
 
     @override
-  Future<String> marketPayment(String productId, String productUuid, String marketRSA) =>
+  Future<MarketPaymentResult> marketPayment(String productId, String productUuid, String marketRSA) =>
       paymentRemoteDataSource.processMarketPayment( productId: productId, productUuid: productUuid, marketRSA: marketRSA, projectPackageName: projectPackageName, );
+@override
+Future<void> retryVerification({
+  required String productId,
+  required String purchaseToken,
+}) async {
+  final response = await paymentRemoteDataSource.verifyPurchase(
+    productId: productId,
+    projectPackageName: projectPackageName,
+    purchaseToken: purchaseToken,
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception(
+      'Verification failed: ${response.statusCode}',
+    );
+  }
+}
 
 }
