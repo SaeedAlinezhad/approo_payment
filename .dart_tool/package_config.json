@@ -170,12 +170,6 @@
       "languageVersion": "2.14"
     },
     {
-      "name": "flutter_poolakey",
-      "rootUri": "file:///C:/Users/Saeed/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_poolakey-2.2.0+1.0.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.0"
-    },
-    {
       "name": "flutter_svg",
       "rootUri": "file:///C:/Users/Saeed/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_svg-2.2.3",
       "packageUri": "lib/",
@@ -300,6 +294,12 @@
       "rootUri": "file:///C:/Users/Saeed/AppData/Local/Pub/Cache/hosted/pub.dev/mockito-5.6.1",
       "packageUri": "lib/",
       "languageVersion": "3.7"
+    },
+    {
+      "name": "myket_iap",
+      "rootUri": "file:///C:/Users/Saeed/AppData/Local/Pub/Cache/hosted/pub.dev/myket_iap-1.1.11",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "nested",
