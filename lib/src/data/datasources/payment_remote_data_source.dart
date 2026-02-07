@@ -12,13 +12,13 @@ abstract class PaymentRemoteDataSource {
     required String description,
     required String projectPackageName,
   });
-    Future<MarketPaymentResult> processMarketPayment({
-    required String productId,
-    required String productUuid,
-    required String marketRSA,
-    required String projectPackageName,
-  });
-    Future<Response> verifyPurchase({
+  Future<MarketPaymentResult> processMarketPayment(
+      {required String productId,
+      required String productUuid,
+      required String marketRSA,
+      required String projectPackageName,
+      required String payload });
+  Future<Response> verifyPurchase({
     required String productId,
     required String projectPackageName,
     required String purchaseToken,
@@ -53,6 +53,7 @@ Future<MarketPaymentResult> processMarketPayment({
   required String productUuid,
   required String marketRSA,
   required String projectPackageName,
+  required String payload,
 }) async {
   final completer = Completer<MarketPaymentResult>();
 
@@ -74,7 +75,7 @@ Future<MarketPaymentResult> processMarketPayment({
     },
     onSucceed: () async {
       try {
-        final purchaseInfo = await FlutterPoolakey.subscribe(productUuid);
+        final purchaseInfo = await FlutterPoolakey.subscribe(productUuid, payload: payload);
 
         final pending = PendingPurchase(
           productId: productId,

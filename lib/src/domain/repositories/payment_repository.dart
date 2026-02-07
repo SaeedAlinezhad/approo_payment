@@ -8,7 +8,7 @@ abstract class PaymentRepository {
     required int productId,
     String description,
   });
-  Future<MarketPaymentResult> marketPayment(String productId, String productUuid, String marketRSA);
+  Future<MarketPaymentResult> marketPayment(String productId, String productUuid, String marketRSA, String payload);
     Future<void> retryVerification({
     required String productId,
     required String purchaseToken,
