@@ -14,13 +14,13 @@ abstract class PaymentRemoteDataSource {
     required String description,
     required String projectPackageName,
   });
-    Future<MarketPaymentResult> processMarketPayment({
-    required String productId,
-    required String productUuid,
-    required String marketRSA,
-    required String projectPackageName,
-  });
-    Future<Response> verifyPurchase({
+  Future<MarketPaymentResult> processMarketPayment(
+      {required String productId,
+      required String productUuid,
+      required String marketRSA,
+      required String projectPackageName,
+      required String payload });
+  Future<Response> verifyPurchase({
     required String productId,
     required String projectPackageName,
     required String purchaseToken,
@@ -49,81 +49,83 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
 
     return PaymentGateway.fromJson(response.data);
   }
-@override
-Future<MarketPaymentResult> processMarketPayment({
-  required String productId,
-  required String productUuid,
-  required String marketRSA,
-  required String projectPackageName,
-}) async {
-  try {
-    await MyketIAP.init(
-      rsaKey: marketRSA,
-      enableDebugLogging: true,
-    );
 
-    final result = await MyketIAP.launchPurchaseFlow(
-      sku: productUuid,
-      payload: "payload",
-    );
+  @override
+  Future<MarketPaymentResult> processMarketPayment(
+      {required String productId,
+      required String productUuid,
+      required String marketRSA,
+      required String projectPackageName,
+      required String payload 
+      }) async {
+    try {
+      await MyketIAP.init(
+        rsaKey: marketRSA,
+        enableDebugLogging: true,
+      );
 
-    final purchase = result[MyketIAP.PURCHASE] as Purchase?;
+      final result = await MyketIAP.launchPurchaseFlow(
+        sku: productUuid,
+        payload: payload,
+      );
 
-    if (purchase == null || purchase.mToken.isEmpty) {
+      final purchase = result[MyketIAP.PURCHASE] as Purchase?;
+
+      if (purchase == null || purchase.mToken.isEmpty) {
+        return MarketPaymentFailure("پرداخت انجام نشد یا ناموفق بود");
+      }
+
+      final pending = PendingPurchase(
+        productId: productId,
+        purchaseToken: purchase.mToken,
+      );
+
+      final response = await verifyPurchase(
+        productId: productId,
+        projectPackageName: projectPackageName,
+        purchaseToken: purchase.mToken,
+      );
+
+      if (response.statusCode == 200) {
+        await MyketIAP.consume(purchase: purchase);
+        return MarketPaymentSuccess();
+      }
+
+      // ⚠️ PAID — SERVER FAILED
+      return MarketPaymentPending(pending);
+    } on PlatformException catch (e) {
+      if (e.code == "PURCHASE_CANCELLED") {
+        return MarketPaymentFailure("پرداخت توسط کاربر لغو شد");
+      }
+
+      if (e.message != null && e.message!.contains("IAB")) {
+        return MarketPaymentFailure(
+            "لطفاً برنامه مایکت را روی دستگاه خود نصب کنید");
+      }
+
+      return MarketPaymentFailure(
+        e.message ?? "پرداخت انجام نشد یا ناموفق بود",
+      );
+    } catch (_) {
       return MarketPaymentFailure("پرداخت انجام نشد یا ناموفق بود");
     }
-
-    final pending = PendingPurchase(
-      productId: productId,
-      purchaseToken: purchase.mToken,
-    );
-
-    final response = await verifyPurchase(
-      productId: productId,
-      projectPackageName: projectPackageName,
-      purchaseToken: purchase.mToken,
-    );
-
-    if (response.statusCode == 200) {
-      await MyketIAP.consume(purchase: purchase);
-      return MarketPaymentSuccess();
-    }
-
-    // ⚠️ PAID — SERVER FAILED
-    return MarketPaymentPending(pending);
-  } on PlatformException catch (e) {
-    if (e.code == "PURCHASE_CANCELLED") {
-      return MarketPaymentFailure("پرداخت توسط کاربر لغو شد");
-    }
-
-    if (e.message != null && e.message!.contains("IAB")) {
-      return MarketPaymentFailure("لطفاً برنامه مایکت را روی دستگاه خود نصب کنید");
-    }
-
-    return MarketPaymentFailure(
-      e.message ?? "پرداخت انجام نشد یا ناموفق بود",
-    );
-  } catch (_) {
-    return MarketPaymentFailure("پرداخت انجام نشد یا ناموفق بود");
   }
-}
 
-@override
-Future<Response> verifyPurchase({
-  required String productId,
-  required String projectPackageName,
-  required String purchaseToken,
-}) {
-  return dio.put(
-    '/package-names/$projectPackageName/products/$productId/subscribe',
-    data: {
-      'purchase_token': purchaseToken,
-      'gateway': 'myket',
-    },
-    options: Options(
-      validateStatus: (status) => true,
-    ),
-  );
-}
-
+  @override
+  Future<Response> verifyPurchase({
+    required String productId,
+    required String projectPackageName,
+    required String purchaseToken,
+  }) {
+    return dio.put(
+      '/package-names/$projectPackageName/products/$productId/subscribe',
+      data: {
+        'purchase_token': purchaseToken,
+        'gateway': 'myket',
+      },
+      options: Options(
+        validateStatus: (status) => true,
+      ),
+    );
+  }
 }

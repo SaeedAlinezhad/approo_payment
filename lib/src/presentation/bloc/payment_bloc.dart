@@ -36,7 +36,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
       try {
         // Call market payment
         final result = await paymentRepository.marketPayment(
-            event.productId, event.productUuid ?? '', event.marketRSA ?? "");
+            event.productId, event.productUuid ?? '', event.marketRSA ?? "", event.payload??"payload");
 
         // Update state with success status
         // emit(state.copyWith(paymentStatus: ProductPaymentSuccess(result)));

@@ -34,8 +34,8 @@ class PaymentRepositoryImpl implements PaymentRepository {
   }
 
     @override
-  Future<MarketPaymentResult> marketPayment(String productId, String productUuid, String marketRSA) =>
-      paymentRemoteDataSource.processMarketPayment( productId: productId, productUuid: productUuid, marketRSA: marketRSA, projectPackageName: projectPackageName, );
+  Future<MarketPaymentResult> marketPayment(String productId, String productUuid, String marketRSA, String payload) =>
+      paymentRemoteDataSource.processMarketPayment( productId: productId, productUuid: productUuid, marketRSA: marketRSA, projectPackageName: projectPackageName, payload: payload);
 @override
 Future<void> retryVerification({
   required String productId,
